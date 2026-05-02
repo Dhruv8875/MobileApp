@@ -1,0 +1,126 @@
+{
+  "theme": "Light",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) infused with Archetype 1 (Organic Trust)",
+  "design_philosophy": "Modern startup style like Airbnb and Zomato. Clean, trustworthy, heavily focused on high-quality imagery, clear typography, and a vibrant primary accent color to drive conversions. Frictionless mobile experience with generous spacing and smooth micro-interactions.",
+  "colors": {
+    "primary": "#FF385C",
+    "primary_light": "#FFE8EC",
+    "secondary": "#222222",
+    "background_main": "#FFFFFF",
+    "background_alt": "#F7F7F7",
+    "surface": "#FFFFFF",
+    "text_main": "#222222",
+    "text_muted": "#717171",
+    "border": "#EBEBEB",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444"
+  },
+  "typography": {
+    "font_family_heading": "Manrope",
+    "font_family_body": "Work Sans",
+    "scales": {
+      "h1": "text-4xl tracking-tighter font-black",
+      "h2": "text-2xl tracking-tight font-bold",
+      "h3": "text-xl tracking-tight font-bold",
+      "body": "text-base leading-relaxed font-normal",
+      "caption": "text-sm text-[#717171] uppercase tracking-wider font-semibold"
+    },
+    "rules": "Never center-align large blocks of text. Ensure text contrast against backgrounds using APCA standards. Headers must be tight and expressive."
+  },
+  "spacing_and_layout": {
+    "screen_padding": "px-5 py-4",
+    "gap_small": "gap-2",
+    "gap_medium": "gap-4",
+    "gap_large": "gap-8",
+    "border_radius": {
+      "small": "rounded-lg",
+      "medium": "rounded-xl",
+      "large": "rounded-2xl",
+      "full": "rounded-full"
+    },
+    "rules": "Use generous padding. Prevent image bleeding into text areas. Always leave breathing room around main CTA buttons. Cards should use rounded-2xl to match modern mobile aesthetics."
+  },
+  "components": {
+    "cards": {
+      "style": "bg-white rounded-2xl border border-[#EBEBEB] shadow-sm overflow-hidden",
+      "image_treatment": "max-h-[250px] w-full object-cover",
+      "glassmorphism_variant": "bg-white/80 backdrop-blur-xl border border-white/40 shadow-lg"
+    },
+    "buttons": {
+      "primary": "bg-[#FF385C] rounded-xl py-4 px-6 items-center justify-center",
+      "primary_text": "text-white font-bold text-lg",
+      "secondary": "bg-white border border-[#222222] rounded-xl py-3 px-6 items-center justify-center",
+      "secondary_text": "text-[#222222] font-semibold text-base",
+      "filter_chip": "bg-[#F7F7F7] border border-[#EBEBEB] rounded-full py-2 px-4 flex-row items-center",
+      "filter_chip_active": "border-[#222222] bg-[#222222] text-white"
+    },
+    "inputs": {
+      "style": "bg-[#F7F7F7] rounded-xl px-4 py-4 text-base border border-transparent focus:border-[#222222] focus:bg-white transition-all",
+      "label": "text-sm font-semibold text-[#222222] mb-2"
+    },
+    "bottom_tabs": {
+      "style": "bg-white border-t border-[#EBEBEB] pt-2 pb-6 px-4 flex-row justify-around",
+      "active_tint": "#FF385C",
+      "inactive_tint": "#717171"
+    }
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.unsplash.com/photo-1771327811766-5f4149190b3d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBiZWRyb29tJTIwaW50ZXJpb3IlMjBpbmRpYXxlbnwwfHx8fDE3Nzc3MTcwMjF8MA&ixlib=rb-4.1.0&q=85",
+        "category": "listing_gallery",
+        "description": "Modern bedroom with large window, used for room listing details."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1750420556288-d0e32a6f517b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBiZWRyb29tJTIwaW50ZXJpb3IlMjBpbmRpYXxlbnwwfHx8fDE3Nzc3MTcwMjF8MA&ixlib=rb-4.1.0&q=85",
+        "category": "listing_thumbnail",
+        "description": "Stylish neutral bedroom, ideal for list view cards."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1771328756051-dff10c3feaab?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBiZWRyb29tJTIwaW50ZXJpb3IlMjBpbmRpYXxlbnwwfHx8fDE3Nzc3MTcwMjF8MA&ixlib=rb-4.1.0&q=85",
+        "category": "listing_gallery",
+        "description": "Cozy bedroom, interior secondary view."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1559329146-807aff9ff1fb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDB8fHx8MTc3NzcxNzAyMXww&ixlib=rb-4.1.0&q=85",
+        "category": "listing_gallery",
+        "description": "Apartment building exterior view."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1737574821698-862e77f044c1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwzfHx5b3VuZyUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NzcxNzAyMXww&ixlib=rb-4.1.0&q=85",
+        "category": "avatar",
+        "description": "Owner/Tenant avatar."
+      },
+      {
+        "url": "https://images.pexels.com/photos/12903019/pexels-photo-12903019.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "avatar",
+        "description": "Owner profile image."
+      }
+    ],
+    "rules": "All listing images must have a 4:3 or 1:1 aspect ratio on lists, and 4:3 on details view. Never use placeholder URLs. Avatars must be rounded-full with object-cover."
+  },
+  "icons": {
+    "library": "lucide-react-native",
+    "stroke_width": 2,
+    "size_default": 24,
+    "rules": "Use consistent stroke width. Solid variants only for active states (e.g., active tab, favorited)."
+  },
+  "animations_and_motion": {
+    "screen_transitions": "Slide from right for navigation, modal slide up for filters.",
+    "interactions": "Scale down to 0.98 on button press.",
+    "image_carousel": "Smooth snap-to-interval scrolling with pagination dots."
+  },
+  "testing": {
+    "rules": "All interactive elements (buttons, inputs, tabs, list items) MUST have a testID attribute matching the pattern 'screen-element-role' (e.g., testID='login-submit-button')."
+  },
+  "instructions_to_main_agent": [
+    "Use NativeWind or standard React Native StyleSheet strictly adhering to the colors and typography scales defined here.",
+    "Implement the UI using a Mobile-First approach, optimized for touch targets (min 44x44px for buttons/icons).",
+    "For Glassmorphism in React Native, use expo-blur (BlurView) instead of CSS backdrop-filter.",
+    "Forms should use KeyboardAvoidingView and ScrollView to ensure inputs remain accessible.",
+    "Integrate the exact media URLs provided for listings and avatars; no dummyimage or placeholders.",
+    "Owner dashboard stats cards should use a grid layout. In React Native, use flex-row and flex-wrap with 48% width per item.",
+    "Use Manrope for headings and Work Sans for body. Load these using expo-font."
+  ]
+}
