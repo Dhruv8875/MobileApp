@@ -88,6 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try { await api.post('/auth/logout'); } catch {}
     await AsyncStorage.removeItem('roomzy_token');
     setUser(null);
+    try {
+      const { router } = require('expo-router');
+      router.replace('/');
+    } catch {}
   };
 
   return (

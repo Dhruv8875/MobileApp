@@ -1,11 +1,22 @@
-import { Tabs } from 'expo-router';
-import { Home, Heart, User, Plus, Briefcase } from 'lucide-react-native';
+import { Tabs, router } from 'expo-router';
+import { useEffect } from 'react';
+import { Home, Heart, User, Briefcase } from 'lucide-react-native';
 import { Colors } from '../../src/theme';
 import { useAuth } from '../../src/api';
 
 export default function TabsLayout() {
   const { user } = useAuth();
-  const isOwner = user?.role === 'owner';
+
+  // Guard: kick back to landing if user has logged out or session expired
+  useEffect(() => {
+    if (user === null) {
+      router.replace('/');
+    }
+  }, [user]);
+
+  if (!user) return null;
+
+  const isOwner = user.role === 'owner';
   return (
     <Tabs
       screenOptions={{

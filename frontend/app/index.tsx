@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../src/ui';
 import { Colors, Spacing } from '../src/theme';
 import { useAuth } from '../src/api';
-import { Search, Shield, Zap, Home as HomeIcon } from 'lucide-react-native';
+import { Search, Shield, Zap } from 'lucide-react-native';
 
 export default function Index() {
   const { user } = useAuth();
@@ -17,8 +16,9 @@ export default function Index() {
 
   if (user === undefined) {
     return (
-      <View style={[styles.container, { justifyContent: 'center' }]}>
-        <ActivityIndicator color={Colors.primary} size="large" />
+      <View style={[styles.container, { justifyContent: 'center', backgroundColor: '#000' }]}>
+        <Image source={require('../assets/images/roomzy-logo.png')} style={{ width: 200, height: 160, resizeMode: 'contain' }} />
+        <ActivityIndicator color={Colors.primary} size="large" style={{ marginTop: 24 }} />
       </View>
     );
   }
@@ -27,21 +27,13 @@ export default function Index() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         <View style={styles.heroWrap}>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1771327811766-5f4149190b3d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBiZWRyb29tJTIwaW50ZXJpb3IlMjBpbmRpYXxlbnwwfHx8fDE3Nzc3MTcwMjF8MA&ixlib=rb-4.1.0&q=85' }}
-            style={styles.hero}
-          />
-          <LinearGradient
-            colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.1)', '#FFFFFF']}
-            locations={[0, 0.4, 1]}
-            style={StyleSheet.absoluteFill}
-          />
-          <SafeAreaView edges={['top']} style={styles.brandRow}>
-            <View style={styles.brandBadge} testID="app-brand">
-              <HomeIcon size={16} color="#FF385C" />
-              <Text style={styles.brandBadgeText}>Roomzy</Text>
-            </View>
+          <SafeAreaView edges={['top']} style={styles.logoWrap}>
+            <Image
+              source={require('../assets/images/roomzy-logo.png')}
+              style={styles.logo}
+            />
           </SafeAreaView>
+          <View style={styles.curve} />
         </View>
 
         <View style={styles.content}>
@@ -77,12 +69,11 @@ function Feature({ icon, label }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  heroWrap: { height: 380, position: 'relative' },
-  hero: { width: '100%', height: '100%' },
-  brandRow: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', paddingHorizontal: Spacing.md, paddingTop: Platform.OS === 'ios' ? 0 : 12 },
-  brandBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  brandBadgeText: { fontWeight: '900', color: Colors.text, letterSpacing: -0.3 },
-  content: { paddingHorizontal: 28, paddingTop: 8, paddingBottom: 32 },
+  heroWrap: { height: 360, backgroundColor: '#000', position: 'relative', alignItems: 'center', justifyContent: 'flex-start' },
+  logoWrap: { width: '100%', alignItems: 'center', paddingTop: 20, flex: 1, justifyContent: 'center' },
+  logo: { width: 260, height: 220, resizeMode: 'contain' },
+  curve: { position: 'absolute', bottom: -1, left: 0, right: 0, height: 32, backgroundColor: Colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
+  content: { paddingHorizontal: 28, paddingTop: 16, paddingBottom: 32 },
   bigTitle: { fontSize: 40, fontWeight: '900', color: Colors.text, letterSpacing: -1.4, lineHeight: 44 },
   sub: { fontSize: 15, color: Colors.textMuted, marginTop: 14, lineHeight: 22 },
   featureRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.xl, gap: 8 },
