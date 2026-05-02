@@ -7,15 +7,26 @@ const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
-  withCredentials: true,
-  timeout: 20000,
+  timeout: 30000,
 });
 
 api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('roomzy_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  try {
+    const token = await AsyncStorage.getItem('roomzy_token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  } catch (e) {
+    console.log('[api] token read failed', e);
+  }
   return config;
 });
+
+api.interceptors.response.use(
+  (r) => r,
+  (err) => {
+    console.log('[api] error', err?.config?.url, err?.response?.status, err?.response?.data || err?.message);
+    return Promise.reject(err);
+  }
+);
 
 export type User = {
   id: string;
