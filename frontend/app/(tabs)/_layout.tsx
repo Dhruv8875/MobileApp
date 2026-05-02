@@ -9,42 +9,31 @@ export default function TabsLayout() {
   const router = useRouter();
   const redirectedRef = useRef(false);
 
-  // Guard: kick back to landing once when user logs out
   useEffect(() => {
     if (user === null && !redirectedRef.current) {
       redirectedRef.current = true;
-      // delay micro-tick so current render commits first
       setTimeout(() => router.replace('/'), 0);
     }
     if (user) redirectedRef.current = false;
   }, [user, router]);
 
   if (!user) return null;
-
   const isOwner = user.role === 'owner';
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
-        tabBarStyle: { borderTopColor: Colors.border, paddingTop: 6, height: 70, paddingBottom: 12 },
+        tabBarStyle: { backgroundColor: Colors.tabBar, borderTopColor: Colors.border, paddingTop: 6, height: 70, paddingBottom: 12 },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        sceneStyle: { backgroundColor: Colors.bg },
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Discover', tabBarIcon: ({ color, size }) => <Home size={size} color={color} /> }} />
-      <Tabs.Screen
-        name="favorites"
-        options={isOwner
-          ? { href: null, title: 'Favorites' }
-          : { title: 'Saved', tabBarIcon: ({ color, size }) => <Heart size={size} color={color} /> }}
-      />
-      <Tabs.Screen
-        name="dashboard"
-        options={isOwner
-          ? { title: 'Dashboard', tabBarIcon: ({ color, size }) => <Briefcase size={size} color={color} /> }
-          : { href: null }}
-      />
+      <Tabs.Screen name="favorites" options={isOwner ? { href: null, title: 'Favorites' } : { title: 'Saved', tabBarIcon: ({ color, size }) => <Heart size={size} color={color} /> }} />
+      <Tabs.Screen name="dashboard" options={isOwner ? { title: 'Dashboard', tabBarIcon: ({ color, size }) => <Briefcase size={size} color={color} /> } : { href: null }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, size }) => <User size={size} color={color} /> }} />
     </Tabs>
   );

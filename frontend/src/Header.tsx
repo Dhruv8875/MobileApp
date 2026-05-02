@@ -1,6 +1,6 @@
 // Shared app header with Roomzy logo
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
@@ -10,22 +10,17 @@ type Props = {
   showBack?: boolean;
   title?: string;
   right?: React.ReactNode;
-  variant?: 'light' | 'dark'; // dark = black bg with logo
   hideLogo?: boolean;
 };
 
-export default function Header({ showBack, title, right, variant = 'light', hideLogo = false }: Props) {
-  const isDark = variant === 'dark';
-  const bg = isDark ? '#000' : Colors.bg;
-  const fg = isDark ? '#fff' : Colors.text;
-
+export default function Header({ showBack, title, right, hideLogo = false }: Props) {
   return (
-    <SafeAreaView edges={['top']} style={{ backgroundColor: bg }}>
-      <View style={[styles.bar, { backgroundColor: bg, borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : Colors.border }]}>
+    <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.headerBg }}>
+      <View style={[styles.bar, { backgroundColor: Colors.headerBg, borderBottomColor: Colors.border }]}>
         <View style={styles.side}>
           {showBack ? (
             <TouchableOpacity onPress={() => router.back()} testID="header-back" style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <ArrowLeft size={22} color={fg} />
+              <ArrowLeft size={22} color={Colors.headerFg} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -34,10 +29,14 @@ export default function Header({ showBack, title, right, variant = 'light', hide
           {!hideLogo ? (
             <View style={styles.brand}>
               <Image source={require('../assets/images/roomzy-mark.png')} style={styles.mark} />
-              {title ? <Text style={[styles.title, { color: fg }]} numberOfLines={1}>{title}</Text> : <Text style={[styles.brandText, { color: fg }]}>Roomzy</Text>}
+              {title ? <Text style={[styles.title, { color: Colors.headerFg }]} numberOfLines={1}>{title}</Text> : (
+                <Text style={[styles.brandText, { color: Colors.headerFg }]}>
+                  <Text style={{ color: Colors.primary }}>Room</Text><Text style={{ color: Colors.accent }}>zy</Text>
+                </Text>
+              )}
             </View>
           ) : (
-            title ? <Text style={[styles.title, { color: fg }]} numberOfLines={1}>{title}</Text> : null
+            title ? <Text style={[styles.title, { color: Colors.headerFg }]} numberOfLines={1}>{title}</Text> : null
           )}
         </View>
 

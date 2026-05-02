@@ -9,6 +9,7 @@ import { Search, Shield, Zap } from 'lucide-react-native';
 
 export default function Index() {
   const { user } = useAuth();
+  const styles = makeStyles();
 
   useEffect(() => {
     if (user) router.replace('/(tabs)');
@@ -28,22 +29,19 @@ export default function Index() {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         <View style={styles.heroWrap}>
           <SafeAreaView edges={['top']} style={styles.logoWrap}>
-            <Image
-              source={require('../assets/images/roomzy-logo-transparent.png')}
-              style={styles.logo}
-            />
+            <Image source={require('../assets/images/roomzy-logo-transparent.png')} style={styles.logo} />
           </SafeAreaView>
           <View style={styles.curve} />
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.bigTitle}>Find your{'\n'}perfect room.</Text>
+          <Text style={styles.bigTitle}>Find your{'\n'}<Text style={{ color: Colors.primary }}>perfect</Text> <Text style={{ color: Colors.accent }}>room.</Text></Text>
           <Text style={styles.sub}>Trusted PGs, flats and shared rooms across India. Built for students, professionals & families.</Text>
 
           <View style={styles.featureRow}>
             <Feature icon={<Search size={18} color={Colors.primary} />} label="Smart search" />
             <Feature icon={<Shield size={18} color={Colors.primary} />} label="Verified owners" />
-            <Feature icon={<Zap size={18} color={Colors.primary} />} label="Instant contact" />
+            <Feature icon={<Zap size={18} color={Colors.accent} />} label="Instant contact" />
           </View>
 
           <View style={{ marginTop: Spacing.xl, gap: 10 }}>
@@ -59,6 +57,7 @@ export default function Index() {
 }
 
 function Feature({ icon, label }: any) {
+  const styles = makeStyles();
   return (
     <View style={styles.feature}>
       <View style={styles.featureIcon}>{icon}</View>
@@ -67,7 +66,7 @@ function Feature({ icon, label }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   heroWrap: { height: 360, backgroundColor: '#000', position: 'relative', alignItems: 'center', justifyContent: 'flex-start' },
   logoWrap: { width: '100%', alignItems: 'center', paddingTop: 20, flex: 1, justifyContent: 'center' },
