@@ -1,22 +1,44 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Roomzy",
+    "slug": "roomzy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "roomzy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.roomzy.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Find rooms & PGs near you",
+        "NSPhotoLibraryUsageDescription": "Pick property photos for your listings",
+        "NSCameraUsageDescription": "Take property photos for your listings"
+      },
+      "config": {
+        "googleMapsApiKey": "REPLACE_WITH_IOS_GOOGLE_MAPS_KEY"
+      }
     },
     "android": {
+      "package": "com.roomzy.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_ANDROID_GOOGLE_MAPS_KEY"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +54,19 @@
           "imageWidth": 280,
           "resizeMode": "contain",
           "backgroundColor": "#000000"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Find rooms & PGs near you"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pick property photos for your listings",
+          "cameraPermission": "Take property photos for your listings"
         }
       ],
       "expo-web-browser"
