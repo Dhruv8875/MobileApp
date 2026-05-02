@@ -1,18 +1,23 @@
-import { Tabs, router } from 'expo-router';
-import { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { Home, Heart, User, Briefcase } from 'lucide-react-native';
 import { Colors } from '../../src/theme';
 import { useAuth } from '../../src/api';
 
 export default function TabsLayout() {
   const { user } = useAuth();
+  const router = useRouter();
+  const redirectedRef = useRef(false);
 
-  // Guard: kick back to landing if user has logged out or session expired
+  // Guard: kick back to landing once when user logs out
   useEffect(() => {
-    if (user === null) {
-      router.replace('/');
+    if (user === null && !redirectedRef.current) {
+      redirectedRef.current = true;
+      // delay micro-tick so current render commits first
+      setTimeout(() => router.replace('/'), 0);
     }
-  }, [user]);
+    if (user) redirectedRef.current = false;
+  }, [user, router]);
 
   if (!user) return null;
 

@@ -1,7 +1,7 @@
 // API client + auth context for Roomzy
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -14,16 +14,14 @@ api.interceptors.request.use(async (config) => {
   try {
     const token = await AsyncStorage.getItem('roomzy_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
-  } catch (e) {
-    console.log('[api] token read failed', e);
-  }
+  } catch {}
   return config;
 });
 
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    console.log('[api] error', err?.config?.url, err?.response?.status, err?.response?.data || err?.message);
+    if (__DEV__) console.log('[api]', err?.config?.url, err?.response?.status, err?.response?.data || err?.message);
     return Promise.reject(err);
   }
 );
@@ -41,64 +39,56 @@ export type User = {
 };
 
 type AuthCtx = {
-  user: User | null | undefined; // undefined = loading
+  user: User | null | undefined;
   login: (email: string, password: string) => Promise<void>;
   register: (data: { name: string; email: string; password: string; role: 'owner' | 'tenant'; phone?: string }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
-  setUser: (u: User | null) => void;
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null | undefined>(undefined);
+  const mounted = useRef(true);
+
+  useEffect(() => () => { mounted.current = false; }, []);
 
   const refresh = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem('roomzy_token');
-      if (!token) {
-        setUser(null);
-        return;
-      }
+      if (!token) { if (mounted.current) setUser(null); return; }
       const { data } = await api.get('/auth/me');
-      setUser(data);
+      if (mounted.current) setUser(data);
     } catch {
-      setUser(null);
+      if (mounted.current) setUser(null);
     }
   }, []);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  useEffect(() => { refresh(); }, [refresh]);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     await AsyncStorage.setItem('roomzy_token', data.token);
     setUser(data.user);
-  };
+  }, []);
 
-  const register = async (payload: { name: string; email: string; password: string; role: 'owner' | 'tenant'; phone?: string }) => {
+  const register = useCallback(async (payload: { name: string; email: string; password: string; role: 'owner' | 'tenant'; phone?: string }) => {
     const { data } = await api.post('/auth/register', payload);
     await AsyncStorage.setItem('roomzy_token', data.token);
     setUser(data.user);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try { await api.post('/auth/logout'); } catch {}
     await AsyncStorage.removeItem('roomzy_token');
     setUser(null);
-    try {
-      const { router } = require('expo-router');
-      router.replace('/');
-    } catch {}
-  };
+    // NOTE: navigation redirect is handled by <AuthGate /> in _layout
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, login, register, logout, refresh, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = useMemo(() => ({ user, login, register, logout, refresh }), [user, login, register, logout, refresh]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

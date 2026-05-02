@@ -51,7 +51,7 @@ export default function Profile() {
 
         <TouchableOpacity
           testID="logout-btn"
-          onPress={() => Alert.alert('Log out?', '', [{ text: 'Cancel', style: 'cancel' }, { text: 'Log out', style: 'destructive', onPress: async () => { await logout(); router.replace('/'); } }])}
+          onPress={() => Alert.alert('Log out?', '', [{ text: 'Cancel', style: 'cancel' }, { text: 'Log out', style: 'destructive', onPress: () => { logout(); } }])}
           style={{ marginTop: Spacing.lg, padding: Spacing.md, borderRadius: Radius.xl, backgroundColor: '#FEF2F2', flexDirection: 'row', alignItems: 'center', gap: 10 }}
         >
           <LogOut size={18} color="#DC2626" />
