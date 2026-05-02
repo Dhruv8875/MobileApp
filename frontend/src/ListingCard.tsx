@@ -30,7 +30,7 @@ export function ListingCard({ item, onFavorite, isFavorited }: { item: Listing; 
       testID={`listing-card-${item.id}`}
       activeOpacity={0.9}
       onPress={() => router.push(`/listing/${item.id}`)}
-      style={{ backgroundColor: '#fff', borderRadius: Radius.xxl, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.md }}
+      style={{ backgroundColor: '#fff', borderRadius: Radius.xxl, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 }}
     >
       <View>
         <Image source={{ uri: photo }} style={{ width: '100%', height: 220 }} />

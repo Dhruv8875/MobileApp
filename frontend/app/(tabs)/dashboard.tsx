@@ -38,19 +38,20 @@ export default function Dashboard() {
   const renew = async (id: string) => {
     try {
       const { data } = await api.post('/payments/create-order', { purpose: 'listing_renewal', listingId: id });
-      await api.post('/payments/verify', { paymentId: data.paymentId, mock: true });
-      Alert.alert('Renewed!', `Listing extended for 30 days. ${data.mock ? '(Mock payment — add Razorpay keys to process real charges)' : ''}`);
+      const res = await api.post('/payments/verify', { paymentId: data.paymentId, mock: true });
+      const until = res?.data?.payment?.updatedAt ? '' : '';
+      Alert.alert('✅ Renewed for 30 days', 'Listing extended. (Payment mocked — add Razorpay keys later to charge real money.)');
       load();
-    } catch (e: any) { Alert.alert('Error', e?.message || 'Failed'); }
+    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail || e?.message || 'Failed'); }
   };
 
   const feature = async (id: string) => {
     try {
       const { data } = await api.post('/payments/create-order', { purpose: 'featured_listing', listingId: id });
       await api.post('/payments/verify', { paymentId: data.paymentId, mock: true });
-      Alert.alert('Featured!', `Listing now top-placed for 30 days. ${data.mock ? '(Mock payment)' : ''}`);
+      Alert.alert('⭐ Featured!', 'Listing is now top-placed for 30 days. (Payment mocked.)');
       load();
-    } catch (e: any) { Alert.alert('Error', e?.message || 'Failed'); }
+    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail || e?.message || 'Failed'); }
   };
 
   return (

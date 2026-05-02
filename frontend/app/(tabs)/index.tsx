@@ -41,16 +41,29 @@ export default function Discover() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params: any = {};
-      if (city) params.city = city;
-      if (propertyType) params.propertyType = propertyType;
-      if (preferredTenant) params.preferredTenant = preferredTenant;
-      if (furnishing) params.furnishing = furnishing;
-      const { data } = await api.get('/listings', { params });
-      setItems(data.results || []);
+      let results: any[] = [];
+      if (user?.role === 'owner') {
+        // Owner sees only their own listings
+        const { data } = await api.get('/listings/mine/list');
+        results = data.results || [];
+        // client-side filter so owner chips still work
+        if (city) results = results.filter((r) => (r.city || '').toLowerCase().includes(city.toLowerCase()) || (r.area || '').toLowerCase().includes(city.toLowerCase()) || (r.pincode || '') === city);
+        if (propertyType) results = results.filter((r) => r.propertyType === propertyType);
+        if (preferredTenant) results = results.filter((r) => r.preferredTenant === preferredTenant);
+        if (furnishing) results = results.filter((r) => r.furnishing === furnishing);
+      } else {
+        const params: any = {};
+        if (city) params.city = city;
+        if (propertyType) params.propertyType = propertyType;
+        if (preferredTenant) params.preferredTenant = preferredTenant;
+        if (furnishing) params.furnishing = furnishing;
+        const { data } = await api.get('/listings', { params });
+        results = data.results || [];
+      }
+      setItems(results);
     } catch (e) { console.log('load err', formatErr(e)); }
     finally { setLoading(false); setRefreshing(false); }
-  }, [city, propertyType, preferredTenant, furnishing]);
+  }, [city, propertyType, preferredTenant, furnishing, user?.role]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -65,9 +78,11 @@ export default function Discover() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
       <View style={{ paddingHorizontal: Spacing.md, paddingTop: 6, paddingBottom: 8 }}>
         <Text style={{ fontSize: 26, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>
-          Hi {user?.name?.split(' ')[0] || 'there'} 👋
+          {user?.role === 'owner' ? `Hi ${user?.name?.split(' ')[0] || 'Owner'} 🏠` : `Hi ${user?.name?.split(' ')[0] || 'there'} 👋`}
         </Text>
-        <Text style={{ color: Colors.textMuted, marginTop: 2 }}>Find your perfect room nearby</Text>
+        <Text style={{ color: Colors.textMuted, marginTop: 2 }}>
+          {user?.role === 'owner' ? 'Manage your properties' : 'Find your perfect room nearby'}
+        </Text>
 
         <View style={{ flexDirection: 'row', gap: 10, marginTop: Spacing.md }}>
           <View style={{ flex: 1, position: 'relative' }}>

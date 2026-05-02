@@ -117,15 +117,42 @@ export default function ListingDetail() {
             <Row label="Available beds" value={String(item.availableBeds || 1)} />
           </Card>
 
-          <Card style={{ marginTop: Spacing.md, padding: Spacing.md, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Image source={{ uri: 'https://images.pexels.com/photos/12903019/pexels-photo-12903019.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' }} style={{ width: 50, height: 50, borderRadius: 25 }} />
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontWeight: '800', color: Colors.text }}>{item.owner?.name || 'Owner'}</Text>
-                {item.owner?.isVerifiedOwner && <Star size={14} color={Colors.primary} fill={Colors.primary} />}
+          <Card style={{ marginTop: Spacing.md, padding: Spacing.md }}>
+            <Text style={{ fontWeight: '800', color: Colors.text, marginBottom: 12 }}>Contact owner</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Image source={{ uri: 'https://images.pexels.com/photos/12903019/pexels-photo-12903019.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' }} style={{ width: 56, height: 56, borderRadius: 28 }} />
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: Colors.text }}>{item.owner?.name || 'Owner'}</Text>
+                  {item.owner?.isVerifiedOwner && <Star size={14} color={Colors.primary} fill={Colors.primary} />}
+                </View>
+                <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 2 }}>Property owner</Text>
               </View>
-              <Text style={{ fontSize: 12, color: Colors.textMuted }}>Property owner</Text>
             </View>
+            {user?.role !== 'owner' && (
+              <View style={{ marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: Colors.border, gap: 10 }}>
+                {phone ? (
+                  <TouchableOpacity onPress={onCall} testID="owner-phone-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}><Phone size={16} color={Colors.primary} /></View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 11, color: Colors.textMuted, fontWeight: '600', letterSpacing: 0.4 }}>PHONE</Text>
+                      <Text style={{ color: Colors.text, fontWeight: '700', fontSize: 15 }}>+91 {phone}</Text>
+                    </View>
+                    <Text style={{ color: Colors.primary, fontSize: 12, fontWeight: '700' }}>TAP TO CALL</Text>
+                  </TouchableOpacity>
+                ) : null}
+                {item.owner?.email ? (
+                  <TouchableOpacity onPress={() => Linking.openURL(`mailto:${item.owner.email}?subject=Roomzy - ${item.title}`)} testID="owner-email-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}><MessageCircle size={16} color={Colors.primary} /></View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 11, color: Colors.textMuted, fontWeight: '600', letterSpacing: 0.4 }}>EMAIL</Text>
+                      <Text style={{ color: Colors.text, fontWeight: '700', fontSize: 15 }}>{item.owner.email}</Text>
+                    </View>
+                    <Text style={{ color: Colors.primary, fontSize: 12, fontWeight: '700' }}>TAP TO MAIL</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            )}
           </Card>
 
           <TouchableOpacity onPress={onReport} testID="report-btn" style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.md, alignSelf: 'flex-start' }}>

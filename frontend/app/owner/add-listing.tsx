@@ -30,7 +30,7 @@ export default function AddListing() {
   const pick = async () => {
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!r.granted) { Alert.alert('Photos permission required'); return; }
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, base64: true, quality: 0.6 });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], base64: true, quality: 0.6 });
     if (!res.canceled && res.assets?.[0]?.base64) {
       const b64 = `data:image/jpeg;base64,${res.assets[0].base64}`;
       set((c: any) => ({ ...c, photos: [...c.photos, b64].slice(0, 8) }));
