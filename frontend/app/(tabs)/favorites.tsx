@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
+import Header from '../../src/Header';
 import { ListingCard } from '../../src/ListingCard';
 import { Colors, Spacing } from '../../src/theme';
 import { api, useAuth } from '../../src/api';
@@ -29,7 +30,8 @@ export default function Favorites() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={[]}>
+      <Header />
       <View style={{ paddingHorizontal: Spacing.md, paddingVertical: 12 }}>
         <Text style={{ fontSize: 28, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>Saved</Text>
         <Text style={{ color: Colors.textMuted, marginTop: 2 }}>Your shortlisted homes</Text>

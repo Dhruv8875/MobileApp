@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
 import { Plus, Eye, Users, Wallet, Edit3, Trash2, RefreshCw, Star } from 'lucide-react-native';
+import Header from '../../src/Header';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Button, Pill, Card } from '../../src/ui';
 import { api, useAuth } from '../../src/api';
@@ -55,7 +56,8 @@ export default function Dashboard() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={[]}>
+      <Header />
       <ScrollView contentContainerStyle={{ padding: Spacing.md, paddingBottom: 40 }}>
         <Text style={{ fontSize: 28, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>Dashboard</Text>
         <Text style={{ color: Colors.textMuted, marginTop: 2 }}>Hi {user?.name?.split(' ')[0]}, here's your activity</Text>

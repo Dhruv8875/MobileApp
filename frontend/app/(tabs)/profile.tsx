@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LogOut, Mail, Phone, ShieldCheck, ChevronRight } from 'lucide-react-native';
+import Header from '../../src/Header';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Card, Pill } from '../../src/ui';
 import { useAuth } from '../../src/api';
@@ -11,7 +12,8 @@ export default function Profile() {
   const { user, logout } = useAuth();
   if (!user) return null;
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={[]}>
+      <Header />
       <ScrollView contentContainerStyle={{ padding: Spacing.md, paddingBottom: 40 }}>
         <Text style={{ fontSize: 28, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>Profile</Text>
 

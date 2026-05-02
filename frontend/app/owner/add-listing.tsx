@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ArrowLeft, Camera, X } from 'lucide-react-native';
+import Header from '../../src/Header';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Button, Input, Chip } from '../../src/ui';
 import { api, formatErr } from '../../src/api';
@@ -53,12 +54,9 @@ export default function AddListing() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['bottom']}>
+      <Header showBack title="Add listing" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: Spacing.md, gap: 12 }}>
-          <TouchableOpacity onPress={() => router.back()} testID="add-back"><ArrowLeft size={24} color={Colors.text} /></TouchableOpacity>
-          <Text style={{ fontSize: 22, fontWeight: '900', color: Colors.text }}>Add listing</Text>
-        </View>
         <ScrollView contentContainerStyle={{ padding: Spacing.md, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
           <Section title="Photos">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, SlidersHorizontal, MapPin, Sparkles } from 'lucide-react-native';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Chip, Input } from '../../src/ui';
+import Header from '../../src/Header';
 import { ListingCard } from '../../src/ListingCard';
 import { api, useAuth, formatErr } from '../../src/api';
 
@@ -75,7 +76,8 @@ export default function Discover() {
   const isFav = (id: string) => user?.favorites?.includes(id);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={[]}>
+      <Header right={<View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 12, fontWeight: '900', color: Colors.primary }}>{(user?.name?.[0] || 'R').toUpperCase()}</Text></View>} />
       <View style={{ paddingHorizontal: Spacing.md, paddingTop: 6, paddingBottom: 8 }}>
         <Text style={{ fontSize: 26, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>
           {user?.role === 'owner' ? `Hi ${user?.name?.split(' ')[0] || 'Owner'} 🏠` : `Hi ${user?.name?.split(' ')[0] || 'there'} 👋`}

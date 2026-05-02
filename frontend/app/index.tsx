@@ -17,7 +17,7 @@ export default function Index() {
   if (user === undefined) {
     return (
       <View style={[styles.container, { justifyContent: 'center', backgroundColor: '#000' }]}>
-        <Image source={require('../assets/images/roomzy-logo.png')} style={{ width: 200, height: 160, resizeMode: 'contain' }} />
+        <Image source={require('../assets/images/roomzy-logo-transparent.png')} style={{ width: 200, height: 160, resizeMode: 'contain' }} />
         <ActivityIndicator color={Colors.primary} size="large" style={{ marginTop: 24 }} />
       </View>
     );
@@ -29,7 +29,7 @@ export default function Index() {
         <View style={styles.heroWrap}>
           <SafeAreaView edges={['top']} style={styles.logoWrap}>
             <Image
-              source={require('../assets/images/roomzy-logo.png')}
+              source={require('../assets/images/roomzy-logo-transparent.png')}
               style={styles.logo}
             />
           </SafeAreaView>
