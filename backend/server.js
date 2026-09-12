@@ -55,7 +55,7 @@ async function start() {
     await mongoose.connect(process.env.MONGO_URL, { dbName: process.env.DB_NAME });
     console.log(`[Roomzy] Connected to MongoDB db=${process.env.DB_NAME}`);
 
-    //await seed();
+    await seed();
 
     // Cron: every hour, expire listings whose free + paid windows are over
     cron.schedule('0 * * * *', async () => {
