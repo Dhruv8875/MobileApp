@@ -10,6 +10,11 @@ const router = express.Router();
 const ATTEMPTS = new Map(); // brute-force guard: ip:email -> {count, until}
 const RESET_TOKENS = new Map(); // token -> {userId, expiresAt}
 
+function normaliseIndianPhone(value) {
+  const digits = String(value || '').replace(/\D/g, '').replace(/^91/, '');
+  return /^[6-9]\d{9}$/.test(digits) ? digits : null;
+}
+
 function issueTokens(user) {
   const accessToken = jwt.sign(
     { sub: user._id.toString(), email: user.email, role: user.role },
@@ -22,7 +27,7 @@ function issueTokens(user) {
 function setAuthCookie(res, token) {
   res.cookie('access_token', token, {
     httpOnly: true,
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
@@ -38,15 +43,28 @@ router.post('/register', async (req, res) => {
     if (!['owner', 'tenant'].includes(role)) {
       return res.status(400).json({ detail: 'role must be owner or tenant' });
     }
-    if (password.length < 6) {
-      return res.status(400).json({ detail: 'Password must be at least 6 characters' });
+    if (password.length < 8) {
+      return res.status(400).json({ detail: 'Password must be at least 8 characters' });
     }
     const normEmail = email.toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normEmail)) {
+      return res.status(400).json({ detail: 'Enter a valid email address' });
+    }
+    const normalisedPhone = normaliseIndianPhone(phone);
+    if (role === 'owner' && !normalisedPhone) {
+      return res.status(400).json({ detail: 'Owners must enter a valid 10-digit Indian mobile number' });
+    }
+    if (phone && !normalisedPhone) {
+      return res.status(400).json({ detail: 'Enter a valid 10-digit Indian mobile number' });
+    }
     const exists = await User.findOne({ email: normEmail });
     if (exists) return res.status(409).json({ detail: 'Email already registered' });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email: normEmail, passwordHash, role, phone: phone || '' });
+    // New owners get a 7-day free trial so their listings are live from day one.
+    const trialDays = parseInt(process.env.LISTING_FREE_DAYS || '7', 10);
+    const trialUntil = role === 'owner' ? new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000) : null;
+    const user = await User.create({ name: name.trim(), email: normEmail, passwordHash, role, phone: normalisedPhone || '', trialUntil });
     const { accessToken } = issueTokens(user);
     setAuthCookie(res, accessToken);
     return res.status(201).json({ user: user.toJSON(), token: accessToken });
@@ -122,7 +140,7 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body || {};
   if (!token || !password) return res.status(400).json({ detail: 'token and password required' });
-  if (password.length < 6) return res.status(400).json({ detail: 'Password must be at least 6 characters' });
+  if (password.length < 8) return res.status(400).json({ detail: 'Password must be at least 8 characters' });
   const rec = RESET_TOKENS.get(token);
   if (!rec || rec.expiresAt < Date.now()) return res.status(400).json({ detail: 'Invalid or expired token' });
   const user = await User.findById(rec.userId);

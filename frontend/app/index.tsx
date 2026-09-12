@@ -52,7 +52,7 @@ export default function Index() {
         <View style={styles.content}>
           <Text style={styles.bigTitle}>
             Find your{'\n'}<Text style={{ color: Colors.primary }}>perfect</Text> <Text style={{ color: Colors.accent }}>room</Text>
-            <Text style={{ color: Colors.text }}>.</Text>
+            
           </Text>
           <Text style={styles.sub}>Trusted PGs, flats and shared rooms across India. Built for students, professionals & families.</Text>
 

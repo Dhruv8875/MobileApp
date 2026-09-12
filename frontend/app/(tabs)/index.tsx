@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal, MapPin, Sparkles } from 'lucide-react-native';
+import * as Location from 'expo-location';
+import { Search, SlidersHorizontal, MapPin, Sparkles, Navigation } from 'lucide-react-native';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Chip, Input } from '../../src/ui';
 import Header from '../../src/Header';
@@ -28,6 +29,12 @@ const FURNISHING = [
   { v: 'unfurnished', l: 'Unfurnished' },
 ];
 
+// Distance options for the "near me" default view (km).
+const RADII = [2, 4, 6, 10, 25];
+const DEFAULT_RADIUS = 4;
+// Fallback centre (Bengaluru) when location permission is denied/unavailable.
+const FALLBACK_COORDS = { latitude: 12.9716, longitude: 77.5946 };
+
 export default function Discover() {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -39,7 +46,48 @@ export default function Discover() {
   const [furnishing, setFurnishing] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Location state (tenant "near me" view)
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locStatus, setLocStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
+  const [locLabel, setLocLabel] = useState('Near you');
+  const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
+
+  const isTenant = user?.role !== 'owner';
+  const searching = city.trim().length > 0; // manual location/city search overrides "near me"
+
+  // Ask for location once (tenants only). On denial, fall back to Bengaluru.
+  useEffect(() => {
+    if (!isTenant) return;
+    let cancelled = false;
+    (async () => {
+      setLocStatus('requesting');
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          if (!cancelled) { setLocStatus('denied'); setLocLabel('Bengaluru'); setCoords(FALLBACK_COORDS); }
+          return;
+        }
+        const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const c = { latitude: here.coords.latitude, longitude: here.coords.longitude };
+        if (cancelled) return;
+        setCoords(c);
+        setLocStatus('granted');
+        try {
+          const geo = await Location.reverseGeocodeAsync(c);
+          const g = geo?.[0];
+          const name = g?.district || g?.subregion || g?.city || g?.name;
+          if (name && !cancelled) setLocLabel(name);
+        } catch { /* reverse geocode is best-effort */ }
+      } catch {
+        if (!cancelled) { setLocStatus('denied'); setLocLabel('Bengaluru'); setCoords(FALLBACK_COORDS); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isTenant]);
+
   const load = useCallback(async () => {
+    // Tenant "near me" view: wait until we have a location fix before first fetch.
+    if (isTenant && !searching && !coords) return;
     setLoading(true);
     try {
       let results: any[] = [];
@@ -54,17 +102,27 @@ export default function Discover() {
         if (furnishing) results = results.filter((r) => r.furnishing === furnishing);
       } else {
         const params: any = {};
-        if (city) params.city = city;
         if (propertyType) params.propertyType = propertyType;
         if (preferredTenant) params.preferredTenant = preferredTenant;
         if (furnishing) params.furnishing = furnishing;
-        const { data } = await api.get('/listings', { params });
-        results = data.results || [];
+        if (searching) {
+          // Manual search: backend matches city OR area OR pincode OR title
+          params.search = city.trim();
+          const { data } = await api.get('/listings', { params });
+          results = data.results || [];
+        } else {
+          // Default: properties near the tenant's current location
+          params.lat = coords!.latitude;
+          params.lng = coords!.longitude;
+          params.radiusKm = radiusKm;
+          const { data } = await api.get('/listings/nearby', { params });
+          results = data.results || [];
+        }
       }
       setItems(results);
     } catch (e) { console.log('load err', formatErr(e)); }
     finally { setLoading(false); setRefreshing(false); }
-  }, [city, propertyType, preferredTenant, furnishing, user?.role]);
+  }, [city, propertyType, preferredTenant, furnishing, user?.role, isTenant, searching, coords, radiusKm]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -79,30 +137,94 @@ export default function Discover() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={[]}>
       <Header right={<View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 12, fontWeight: '900', color: Colors.primary }}>{(user?.name?.[0] || 'R').toUpperCase()}</Text></View>} />
       <View style={{ paddingHorizontal: Spacing.md, paddingTop: 6, paddingBottom: 8 }}>
-        <Text style={{ fontSize: 26, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>
-          {user?.role === 'owner' ? `Hi ${user?.name?.split(' ')[0] || 'Owner'} 🏠` : `Hi ${user?.name?.split(' ')[0] || 'there'} 👋`}
-        </Text>
-        <Text style={{ color: Colors.textMuted, marginTop: 2 }}>
-          {user?.role === 'owner' ? 'Manage your properties' : 'Find your perfect room nearby'}
-        </Text>
 
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: Spacing.md }}>
-          <View style={{ flex: 1, position: 'relative' }}>
-            <View style={{ position: 'absolute', left: 14, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 }}>
-              <Search size={18} color={Colors.textMuted} />
-            </View>
-            <View style={{ backgroundColor: Colors.bgAlt, borderRadius: Radius.full, paddingHorizontal: 40, paddingVertical: 12 }}>
-              <Input value={city} onChangeText={setCity} placeholder="City, area or pincode" testID="search-input" />
-            </View>
+
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: Spacing.md, alignItems: 'center' }}>
+
+  {/* SEARCH */}
+  <View style={{ flex: 1, position: 'relative' }}>
+
+    {/* Icon */}
+    <View style={{
+      position: 'absolute',
+      left: 14,
+      height: '100%',
+      justifyContent: 'center',
+      zIndex: 1
+    }}>
+      <Search size={18} color={Colors.textMuted} />
+    </View>
+
+    {/* Input wrapper */}
+    <View style={{
+      height: 50, // 🔥 FIXED HEIGHT
+      backgroundColor: Colors.bgAlt,
+      borderRadius: Radius.full,
+      justifyContent: 'center',
+      paddingLeft: 40,
+      paddingRight: 12
+    }}>
+      <Input
+        value={city}
+        onChangeText={setCity}
+        placeholder="City, area or pincode"
+        testID="search-input"
+        style={{ padding: 0 }} // 🔥 remove extra spacing
+      />
+    </View>
+
+  </View>
+
+  {/* FILTER BUTTON */}
+  <TouchableOpacity
+    testID="filters-toggle"
+    onPress={() => setShowFilters(!showFilters)}
+    style={{
+      width: 50,
+      height: 50,
+      borderRadius: Radius.full,
+      backgroundColor: showFilters ? Colors.text : Colors.bgAlt,
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
+    <SlidersHorizontal size={20} color={showFilters ? '#fff' : Colors.text} />
+  </TouchableOpacity>
+
+</View>
+
+        {/* LOCATION BAR (tenant only) */}
+        {isTenant && (
+          <View style={{ marginTop: 12 }}>
+            {searching ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MapPin size={15} color={Colors.textMuted} />
+                <Text style={{ marginLeft: 6, color: Colors.textMuted, fontSize: 13, flex: 1 }} numberOfLines={1}>
+                  Showing results for “{city.trim()}”
+                </Text>
+                <TouchableOpacity testID="use-my-location" onPress={() => setCity('')} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Navigation size={13} color={Colors.primary} />
+                  <Text style={{ color: Colors.primary, fontWeight: '800', fontSize: 12 }}>Near me</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <MapPin size={15} color={Colors.primary} />
+                  <Text style={{ marginLeft: 6, color: Colors.text, fontSize: 13, fontWeight: '700', flex: 1 }} numberOfLines={1}>
+                    {locLabel} · within {radiusKm} km
+                    {locStatus === 'denied' ? '  (location off)' : ''}
+                  </Text>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 10 }}>
+                  {RADII.map((km) => (
+                    <Chip key={km} label={`${km} km`} active={radiusKm === km} onPress={() => setRadiusKm(km)} testID={`radius-${km}`} />
+                  ))}
+                </ScrollView>
+              </>
+            )}
           </View>
-          <TouchableOpacity
-            testID="filters-toggle"
-            onPress={() => setShowFilters(!showFilters)}
-            style={{ width: 50, height: 50, borderRadius: Radius.full, backgroundColor: showFilters ? Colors.text : Colors.bgAlt, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <SlidersHorizontal size={20} color={showFilters ? '#fff' : Colors.text} />
-          </TouchableOpacity>
-        </View>
+        )}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 12 }}>
           {PROPERTY_TYPES.map((t) => (
@@ -144,12 +266,18 @@ export default function Discover() {
           ListEmptyComponent={
             <View style={{ alignItems: 'center', padding: 40 }}>
               <Sparkles size={32} color={Colors.textMuted} />
-              <Text style={{ marginTop: 12, color: Colors.textMuted, textAlign: 'center' }}>No listings match your filters yet. Try widening your search.</Text>
+              <Text style={{ marginTop: 12, color: Colors.textMuted, textAlign: 'center' }}>
+                {isTenant && !searching
+                  ? `No homes within ${radiusKm} km. Try a bigger distance or search a city above.`
+                  : 'No listings match your filters yet. Try widening your search.'}
+              </Text>
             </View>
           }
           ListHeaderComponent={
             items.length > 0 ? (
-              <Text style={{ fontWeight: '700', marginBottom: 10, color: Colors.text }}>{items.length} {items.length === 1 ? 'home' : 'homes'} available</Text>
+              <Text style={{ fontWeight: '700', marginBottom: 10, color: Colors.text }}>
+                {items.length} {items.length === 1 ? 'home' : 'homes'}{isTenant && !searching ? ` within ${radiusKm} km` : ' available'}
+              </Text>
             ) : null
           }
         />

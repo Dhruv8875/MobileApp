@@ -39,6 +39,8 @@ const MapViewWrap = forwardRef<any, Props>(({ center, points, onPressPoint }, re
   );
 });
 
+MapViewWrap.displayName = 'MapViewWrap';
+
 export default MapViewWrap;
 
 const styles = StyleSheet.create({

@@ -8,6 +8,8 @@ import { Colors, Spacing } from '../../src/theme';
 import { Card, Pill } from '../../src/ui';
 import { api } from '../../src/api';
 
+const PLAN_TITLES: Record<string, string> = { '1m': '1 Month plan', '3m': '3 Months plan', '6m': '6 Months plan', '12m': '1 Year plan' };
+
 export default function Payments() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +24,9 @@ export default function Payments() {
               <Card key={p.id} style={{ padding: Spacing.md, marginBottom: 10 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <View>
-                    <Text style={{ fontWeight: '800', color: Colors.text }}>{p.purpose.replace('_', ' ')}</Text>
+                    <Text style={{ fontWeight: '800', color: Colors.text }}>
+                      {p.purpose === 'subscription' ? (PLAN_TITLES[p.plan] || 'Subscription') : p.purpose.replace('_', ' ')}
+                    </Text>
                     <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 2 }}>{p.listing?.title || ''}</Text>
                     <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 2 }}>{new Date(p.createdAt).toLocaleString()}</Text>
                   </View>

@@ -2,6 +2,7 @@
 const express = require('express');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
+const { Payment, Lead, Report, ChatMessage, Notification } = require('../models');
 const { authRequired } = require('../middleware/auth');
 
 const router = express.Router();
@@ -37,6 +38,34 @@ router.put('/profile', authRequired, async (req, res) => {
   for (const k of allowed) if (k in req.body) update[k] = req.body[k];
   const user = await User.findByIdAndUpdate(req.user._id, update, { new: true });
   return res.json(user.toJSON());
+});
+
+// Permanently delete the signed-in user's account and all their data.
+// Required by the Google Play "account deletion" policy for apps with accounts.
+router.delete('/account', authRequired, async (req, res) => {
+  try {
+    const uid = req.user._id;
+    const owned = await Listing.find({ owner: uid }).select('_id');
+    const listingIds = owned.map((l) => l._id);
+
+    await Promise.all([
+      Listing.deleteMany({ owner: uid }),
+      Lead.deleteMany({ $or: [{ owner: uid }, { tenant: uid }] }),
+      Report.deleteMany({ $or: [{ reporter: uid }, { listing: { $in: listingIds } }] }),
+      ChatMessage.deleteMany({ $or: [{ from: uid }, { to: uid }] }),
+      Notification.deleteMany({ user: uid }),
+      Payment.deleteMany({ user: uid }),
+      // Remove this user's listings from everyone else's favorites.
+      User.updateMany({ favorites: { $in: listingIds } }, { $pull: { favorites: { $in: listingIds } } }),
+    ]);
+
+    await User.findByIdAndDelete(uid);
+    res.clearCookie('access_token', { path: '/' });
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('delete account error', e);
+    return res.status(500).json({ detail: 'Failed to delete account' });
+  }
 });
 
 module.exports = router;

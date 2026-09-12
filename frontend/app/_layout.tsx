@@ -21,6 +21,7 @@ function ThemedStack() {
         <Stack.Screen name="owner/add-listing" />
         <Stack.Screen name="owner/leads" />
         <Stack.Screen name="owner/payments" />
+        <Stack.Screen name="owner/plans" />
       </Stack>
     </View>
   );

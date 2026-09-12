@@ -30,4 +30,6 @@ const MapViewWrap = forwardRef<any, Props>(() => {
   );
 });
 
+MapViewWrap.displayName = 'MapViewWrap';
+
 export default MapViewWrap;

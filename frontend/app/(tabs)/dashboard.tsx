@@ -2,11 +2,17 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { Plus, Eye, Users, Wallet, Edit3, Trash2, RefreshCw, Star } from 'lucide-react-native';
+import { Eye, Users, Wallet, Trash2, Star, BadgeCheck, ChevronRight } from 'lucide-react-native';
 import Header from '../../src/Header';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Button, Pill, Card } from '../../src/ui';
 import { api, useAuth } from '../../src/api';
+
+function fmtDate(d?: string | null) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  catch { return ''; }
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -36,31 +42,19 @@ export default function Dashboard() {
     ]);
   };
 
-  const renew = async (id: string) => {
-    try {
-      const { data } = await api.post('/payments/create-order', { purpose: 'listing_renewal', listingId: id });
-      const res = await api.post('/payments/verify', { paymentId: data.paymentId, mock: true });
-      const until = res?.data?.payment?.updatedAt ? '' : '';
-      Alert.alert('✅ Renewed for 30 days', 'Listing extended. (Payment mocked — add Razorpay keys later to charge real money.)');
-      load();
-    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail || e?.message || 'Failed'); }
-  };
-
-  const feature = async (id: string) => {
-    try {
-      const { data } = await api.post('/payments/create-order', { purpose: 'featured_listing', listingId: id });
-      await api.post('/payments/verify', { paymentId: data.paymentId, mock: true });
-      Alert.alert('⭐ Featured!', 'Listing is now top-placed for 30 days. (Payment mocked.)');
-      load();
-    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail || e?.message || 'Failed'); }
-  };
+  // Account-level subscription state drives the banner below.
+  const sub = user?.subscriptionActive
+    ? { tone: Colors.success, title: 'Plan active · Verified', sub: `Your listings are live till ${fmtDate(user?.subscriptionUntil)}`, cta: 'Manage' }
+    : user?.trialActive
+      ? { tone: Colors.primary, title: 'Free trial active', sub: `Subscribe before ${fmtDate(user?.trialUntil)} to stay live`, cta: 'View plans' }
+      : { tone: Colors.error, title: 'Listings hidden', sub: 'No active plan — subscribe to make your listings visible', cta: 'View plans' };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={[]}>
       <Header />
       <ScrollView contentContainerStyle={{ padding: Spacing.md, paddingBottom: 40 }}>
         <Text style={{ fontSize: 28, fontWeight: '900', color: Colors.text, letterSpacing: -0.6 }}>Dashboard</Text>
-        <Text style={{ color: Colors.textMuted, marginTop: 2 }}>Hi {user?.name?.split(' ')[0]}, here's your activity</Text>
+        <Text style={{ color: Colors.textMuted, marginTop: 2 }}>Hi {user?.name?.split(' ')[0]}, here{`'`}s your activity</Text>
 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: Spacing.md }}>
           <StatCard icon={<Eye size={18} color={Colors.primary} />} label="Profile visits" value={stats.visits} />
@@ -74,25 +68,21 @@ export default function Dashboard() {
           <Button title="Leads" variant="secondary" onPress={() => router.push('/owner/leads')} testID="view-leads-btn" />
         </View>
 
-        {!user?.isVerifiedOwner && (
-          <TouchableOpacity
-            onPress={async () => {
-              try {
-                const { data } = await api.post('/payments/create-order', { purpose: 'owner_verification' });
-                await api.post('/payments/verify', { paymentId: data.paymentId, mock: true });
-                Alert.alert('Verified!', 'You now have a Verified Owner badge ⭐');
-                load();
-              } catch (e: any) { Alert.alert('Error', e?.message); }
-            }}
-            style={{ marginTop: Spacing.md, padding: Spacing.md, borderRadius: Radius.xl, backgroundColor: Colors.primaryLight, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-          >
-            <Star size={22} color={Colors.primary} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '800', color: Colors.text }}>Get Verified Owner badge</Text>
-              <Text style={{ fontSize: 12, color: Colors.textMuted }}>₹199 — boost trust & lead conversions</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          testID="subscription-banner"
+          onPress={() => router.push('/owner/plans')}
+          style={{ marginTop: Spacing.md, padding: Spacing.md, borderRadius: Radius.xl, borderWidth: 1, borderColor: sub.tone, backgroundColor: sub.tone + '14', flexDirection: 'row', alignItems: 'center', gap: 12 }}
+        >
+          <BadgeCheck size={22} color={sub.tone} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: '800', color: Colors.text }}>{sub.title}</Text>
+            <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 1 }}>{sub.sub}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <Text style={{ color: sub.tone, fontWeight: '800', fontSize: 13 }}>{sub.cta}</Text>
+            <ChevronRight size={16} color={sub.tone} />
+          </View>
+        </TouchableOpacity>
 
         <Text style={{ fontSize: 18, fontWeight: '800', color: Colors.text, marginTop: Spacing.xl }}>Your listings</Text>
         {loading ? (
@@ -114,8 +104,6 @@ export default function Dashboard() {
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: Spacing.md, flexWrap: 'wrap' }}>
-                <ActionBtn icon={<RefreshCw size={14} color={Colors.text} />} label="Renew ₹99" onPress={() => renew(l.id)} testID={`renew-${l.id}`} />
-                <ActionBtn icon={<Star size={14} color={Colors.text} />} label="Feature ₹299" onPress={() => feature(l.id)} testID={`feature-${l.id}`} />
                 <ActionBtn icon={<Trash2 size={14} color="#DC2626" />} label="Delete" onPress={() => remove(l.id)} danger testID={`delete-${l.id}`} />
               </View>
             </Card>

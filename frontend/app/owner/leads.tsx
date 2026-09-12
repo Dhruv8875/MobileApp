@@ -17,7 +17,7 @@ export default function Leads() {
       <Header showBack title="Leads" />
       {loading ? <ActivityIndicator color={Colors.primary} /> : (
         <ScrollView contentContainerStyle={{ padding: Spacing.md, paddingBottom: 40 }}>
-          {items.length === 0 ? <Text style={{ color: Colors.textMuted, textAlign: 'center', marginTop: 40 }}>No leads yet. They'll show up here.</Text> :
+          {items.length === 0 ? <Text style={{ color: Colors.textMuted, textAlign: 'center', marginTop: 40 }}>No leads yet. They{`'`}ll show up here.</Text> :
             items.map((l) => (
               <Card key={l.id} style={{ padding: Spacing.md, marginBottom: 10 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

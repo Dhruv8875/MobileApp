@@ -7,9 +7,12 @@ const paymentSchema = new mongoose.Schema(
     listing: { type: mongoose.Schema.Types.ObjectId, ref: 'Listing', default: null },
     purpose: {
       type: String,
-      enum: ['listing_renewal', 'featured_listing', 'owner_verification'],
+      // 'subscription' is the current model; the others are legacy (kept so old
+      // payment records still load) and are no longer sold.
+      enum: ['subscription', 'listing_renewal', 'featured_listing', 'owner_verification'],
       required: true,
     },
+    plan: { type: String, default: '' }, // subscription plan key: 1m | 3m | 6m | 12m
     amount: { type: Number, required: true }, // INR rupees
     currency: { type: String, default: 'INR' },
     razorpayOrderId: { type: String, default: '' },

@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.roomzy.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Find rooms & PGs near you",
         "NSPhotoLibraryUsageDescription": "Pick property photos for your listings",
@@ -22,6 +23,7 @@
     },
     "android": {
       "package": "com.roomzy.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"

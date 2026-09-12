@@ -10,15 +10,16 @@ const SAMPLE_IMAGES = [
   'https://images.unsplash.com/photo-1559329146-807aff9ff1fb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDB8fHx8MTc3NzcxNzAyMXww&ixlib=rb-4.1.0&q=85',
 ];
 
-async function ensureUser({ name, email, role, password, phone, isVerifiedOwner = false }) {
+async function ensureUser({ name, email, role, password, phone, subscriptionUntil = null }) {
   let u = await User.findOne({ email });
   const hash = await bcrypt.hash(password, 10);
   if (!u) {
-    u = await User.create({ name, email, role, passwordHash: hash, phone, isVerifiedOwner });
+    u = await User.create({ name, email, role, passwordHash: hash, phone, subscriptionUntil, verifiedUntil: subscriptionUntil });
   } else {
     u.passwordHash = hash;
     u.role = role;
-    u.isVerifiedOwner = isVerifiedOwner;
+    u.subscriptionUntil = subscriptionUntil;
+    u.verifiedUntil = subscriptionUntil;
     if (phone) u.phone = phone;
     await u.save();
   }
@@ -31,7 +32,8 @@ async function seed() {
       name: 'Tina Tenant', email: 'tenant@roomzy.in', role: 'tenant', password: 'tenant123', phone: '9000000001',
     });
     const owner = await ensureUser({
-      name: 'Omar Owner', email: 'owner@roomzy.in', role: 'owner', password: 'owner123', phone: '9000000002', isVerifiedOwner: true,
+      name: 'Omar Owner', email: 'owner@roomzy.in', role: 'owner', password: 'owner123', phone: '9000000002',
+      subscriptionUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // active 1-year plan for the demo
     });
 
     const count = await Listing.countDocuments({ owner: owner._id });

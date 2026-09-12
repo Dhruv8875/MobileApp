@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +7,9 @@ import { Button, Input } from '../src/ui';
 import { Colors, Spacing, Radius } from '../src/theme';
 import { useAuth, formatErr } from '../src/api';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+
+const { height: H } = Dimensions.get('window');
+const isSmall = H < 700;
 
 export default function Login() {
   const { login } = useAuth();
@@ -26,16 +29,25 @@ export default function Login() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bg }}>
-      {/* Compact hero */}
+      {/* Hero (matches landing / register screens) */}
       <View style={styles.hero}>
-        <LinearGradient colors={['#000', '#0B1233']} style={StyleSheet.absoluteFill} />
-        <SafeAreaView edges={['top']} style={{ flex: 1, paddingHorizontal: Spacing.md }}>
-          <TouchableOpacity onPress={() => router.back()} testID="back-btn" style={styles.backBtn}>
-            <ArrowLeft size={22} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.logoWrap}>
-            <Image source={require('../assets/images/roomzy-logo-transparent.png')} style={styles.logo} />
+        <LinearGradient colors={['#000', '#0B1233', '#000']} style={StyleSheet.absoluteFill} />
+        {/* Decorative orbs */}
+        <View style={[styles.orb, { top: 40, left: -40, backgroundColor: Colors.primary + '33' }]} />
+        <View style={[styles.orb, { top: 120, right: -60, backgroundColor: Colors.accent + '22', width: 160, height: 160 }]} />
+
+        <SafeAreaView edges={['top']} style={styles.heroContent}>
+          <View style={styles.heroTopRow}>
+            <TouchableOpacity onPress={() => router.back()} testID="back-btn" style={styles.backBtn}>
+              <ArrowLeft size={22} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.pill}>
+              <View style={styles.pillDot} />
+              <Text style={styles.pillText}>Live in 50+ Indian cities</Text>
+            </View>
+            <View style={{ width: 40 }} />
           </View>
+          <Image source={require('../assets/images/roomzy-logo-transparent.png')} style={styles.logo} />
         </SafeAreaView>
         <View style={styles.curve} />
       </View>
@@ -112,11 +124,16 @@ function DemoRow({ label, email, pw, onTap }: any) {
 }
 
 const makeStyles = () => StyleSheet.create({
-  hero: { height: 240, position: 'relative', overflow: 'hidden' },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 6 },
-  logoWrap: { alignItems: 'center', flex: 1, justifyContent: 'center' },
-  logo: { width: 160, height: 120, resizeMode: 'contain' },
-  curve: { position: 'absolute', bottom: -1, left: 0, right: 0, height: 28, backgroundColor: Colors.bg, borderTopLeftRadius: 32, borderTopRightRadius: 32 },
+  hero: { height: isSmall ? 300 : 380, position: 'relative', overflow: 'hidden' },
+  heroContent: { flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingVertical: 24 },
+  heroTopRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
+  orb: { position: 'absolute', width: 200, height: 200, borderRadius: 100, opacity: 0.7 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  pill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, gap: 6 },
+  pillDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
+  pillText: { color: '#fff', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  logo: { width: isSmall ? 200 : 260, height: isSmall ? 160 : 210, resizeMode: 'contain' },
+  curve: { position: 'absolute', bottom: -1, left: 0, right: 0, height: 32, backgroundColor: Colors.bg, borderTopLeftRadius: 32, borderTopRightRadius: 32 },
   content: { padding: 24, paddingBottom: 40 },
   title: { fontSize: 28, fontWeight: '900', color: Colors.text, letterSpacing: -0.8 },
   sub: { color: Colors.textMuted, marginTop: 6, fontSize: 14 },

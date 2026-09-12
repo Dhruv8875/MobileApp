@@ -2,18 +2,46 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import fetchAdapter from '@vespaiach/axios-fetch-adapter';
+import { router } from 'expo-router';
+import Constants from 'expo-constants';
 
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+// Resolve the backend base URL:
+//  1) EXPO_PUBLIC_BACKEND_URL wins if set (use for staging/production HTTPS).
+//  2) Otherwise derive the host from the Expo dev server (the machine running
+//     Metro) and talk to :8001 there — so LAN testing "just works" on any
+//     laptop without editing .env, as long as the phone is on the same Wi-Fi.
+function resolveBaseUrl(): string {
+  const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL?.trim();
+  if (envUrl) return envUrl.replace(/\/+$/, '');
+
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    (Constants as any).expoGoConfig?.debuggerHost ||
+    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ||
+    '';
+  const host = String(hostUri).split(':')[0];
+  if (host) return `http://${host}:8001`;
+
+  return 'http://localhost:8001';
+}
+
+const BASE_URL = resolveBaseUrl();
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   timeout: 30000,
+  adapter: fetchAdapter,
 });
 
 api.interceptors.request.use(async (config) => {
   try {
     const token = await AsyncStorage.getItem('roomzy_token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      const headers: any = config.headers ?? {};
+      headers.Authorization = `Bearer ${token}`;
+      config.headers = headers;
+    }
   } catch {}
   return config;
 });
@@ -34,6 +62,10 @@ export type User = {
   role: 'owner' | 'tenant';
   avatar: string;
   isVerifiedOwner: boolean;
+  subscriptionActive?: boolean;
+  trialActive?: boolean;
+  subscriptionUntil?: string | null;
+  trialUntil?: string | null;
   favorites: string[];
   bio: string;
 };
@@ -43,6 +75,7 @@ type AuthCtx = {
   login: (email: string, password: string) => Promise<void>;
   register: (data: { name: string; email: string; password: string; role: 'owner' | 'tenant'; phone?: string }) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
@@ -83,10 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try { await api.post('/auth/logout'); } catch {}
     await AsyncStorage.removeItem('roomzy_token');
     setUser(null);
-    // NOTE: navigation redirect is handled by <AuthGate /> in _layout
+    router.replace('/login');
   }, []);
 
-  const value = useMemo(() => ({ user, login, register, logout, refresh }), [user, login, register, logout, refresh]);
+  const deleteAccount = useCallback(async () => {
+    await api.delete('/users/account');
+    await AsyncStorage.removeItem('roomzy_token');
+    setUser(null);
+    router.replace('/login');
+  }, []);
+
+  const value = useMemo(() => ({ user, login, register, logout, deleteAccount, refresh }), [user, login, register, logout, deleteAccount, refresh]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

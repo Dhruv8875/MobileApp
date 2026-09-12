@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { ArrowLeft, Camera, X } from 'lucide-react-native';
+import * as Location from 'expo-location';
+import { ArrowLeft, Camera, X, MapPin } from 'lucide-react-native';
 import Header from '../../src/Header';
 import { Colors, Spacing, Radius } from '../../src/theme';
 import { Button, Input, Chip } from '../../src/ui';
@@ -22,11 +23,43 @@ export default function AddListing() {
     address: '', city: '', area: '', pincode: '', landmark: '',
     amenities: { ac: false, attachedBathroom: true, wifi: false, parking: false, foodAvailable: false, roommateAllowed: false },
     photos: [] as string[], rules: '', availableNow: true,
+    location: null as null | { type: 'Point'; coordinates: [number, number] },
   });
   const [loading, setLoading] = useState(false);
+  const [locBusy, setLocBusy] = useState(false);
 
   const upd = (k: string, v: any) => set((cur: any) => ({ ...cur, [k]: v }));
   const updAmen = (k: string) => set((cur: any) => ({ ...cur, amenities: { ...cur.amenities, [k]: !cur.amenities[k] } }));
+
+  // Capture the property's GPS pin so it shows up in map + "near me" search.
+  // Best-effort auto-fills city/area/PIN when those are still empty.
+  const useMyLocation = async () => {
+    setLocBusy(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Location needed', 'Location on karein taaki tenants aapki property ko map aur "near me" search me dhoondh sakein.');
+        return;
+      }
+      const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const { latitude, longitude } = here.coords;
+      set((c: any) => ({ ...c, location: { type: 'Point', coordinates: [longitude, latitude] } }));
+      try {
+        const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
+        const g = geo?.[0];
+        if (g) set((c: any) => ({
+          ...c,
+          city: c.city || g.city || g.subregion || '',
+          area: c.area || g.district || g.name || '',
+          pincode: c.pincode || (g.postalCode || '').replace(/\D/g, '').slice(0, 6),
+        }));
+      } catch { /* reverse geocode is best-effort */ }
+    } catch {
+      Alert.alert('Error', 'Location fetch nahi ho payi. Dobara try karein.');
+    } finally {
+      setLocBusy(false);
+    }
+  };
 
   const pick = async () => {
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -38,19 +71,38 @@ export default function AddListing() {
     }
   };
 
-  const submit = async () => {
-    if (!s.title || !s.city || !s.address || !s.monthlyRent) { Alert.alert('Missing fields', 'Title, address, city and rent are required.'); return; }
+  const doSubmit = async () => {
     setLoading(true);
     try {
-      const payload = {
+      const payload: any = {
         ...s,
         monthlyRent: Number(s.monthlyRent), depositAmount: Number(s.depositAmount || 0),
         advanceMonths: Number(s.advanceMonths || 0), maintenanceCharge: Number(s.maintenanceCharge || 0),
         totalRooms: Number(s.totalRooms || 1), availableBeds: Number(s.availableBeds || 1),
       };
+      // Don't send a null location — let the schema default apply instead.
+      if (!payload.location) delete payload.location;
       await api.post('/listings', payload);
       Alert.alert('Listed!', 'Your property is live for the next 7 days free.', [{ text: 'OK', onPress: () => router.replace('/(tabs)/dashboard') }]);
     } catch (e: any) { Alert.alert('Error', formatErr(e)); } finally { setLoading(false); }
+  };
+
+  const submit = async () => {
+    if (!s.title || !s.city || !s.address || !s.monthlyRent) { Alert.alert('Missing fields', 'Title, address, city and rent are required.'); return; }
+    if (Number(s.monthlyRent) < 500) { Alert.alert('Check rent', 'Monthly rent should be at least ₹500.'); return; }
+    if (s.pincode && !/^\d{6}$/.test(s.pincode)) { Alert.alert('Check PIN code', 'Enter a valid 6-digit Indian PIN code.'); return; }
+    if (!s.location) {
+      Alert.alert(
+        'Location pin missing',
+        'Bina location pin ke aapki listing map aur "near me" search me nahi dikhegi. Location add karein?',
+        [
+          { text: 'Add location', onPress: useMyLocation },
+          { text: 'Publish anyway', style: 'destructive', onPress: doSubmit },
+        ]
+      );
+      return;
+    }
+    doSubmit();
   };
 
   return (
@@ -81,9 +133,9 @@ export default function AddListing() {
           <Section title="Basic info">
             <Field label="Title"><Input value={s.title} onChangeText={(v: string) => upd('title', v)} placeholder="Cozy 1BHK in Indiranagar" testID="f-title" /></Field>
             <Field label="Description"><Input value={s.description} onChangeText={(v: string) => upd('description', v)} placeholder="Tell tenants what makes your place special" multiline testID="f-desc" /></Field>
-            <Field label="Property type"><ChipRow items={PT} value={s.propertyType} onChange={(v) => upd('propertyType', v)} prefix="pt" /></Field>
-            <Field label="Furnishing"><ChipRow items={FU} value={s.furnishing} onChange={(v) => upd('furnishing', v)} prefix="fu" /></Field>
-            <Field label="Preferred tenant"><ChipRow items={TT} value={s.preferredTenant} onChange={(v) => upd('preferredTenant', v)} prefix="tt" /></Field>
+            <Field label="Property type"><ChipRow items={PT} value={s.propertyType} onChange={(v: string) => upd('propertyType', v)} prefix="pt" /></Field>
+            <Field label="Furnishing"><ChipRow items={FU} value={s.furnishing} onChange={(v: string) => upd('furnishing', v)} prefix="fu" /></Field>
+            <Field label="Preferred tenant"><ChipRow items={TT} value={s.preferredTenant} onChange={(v: string) => upd('preferredTenant', v)} prefix="tt" /></Field>
           </Section>
 
           <Section title="Pricing (₹)">
@@ -94,10 +146,33 @@ export default function AddListing() {
           </Section>
 
           <Section title="Address">
+            <TouchableOpacity
+              testID="use-location"
+              onPress={useMyLocation}
+              disabled={locBusy}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12,
+                paddingVertical: 12, paddingHorizontal: 14, borderRadius: Radius.lg,
+                borderWidth: 1.5, borderStyle: s.location ? 'solid' : 'dashed',
+                borderColor: s.location ? Colors.primary : Colors.border,
+                backgroundColor: s.location ? Colors.primaryLight : Colors.bgAlt,
+              }}
+            >
+              {locBusy ? <ActivityIndicator size="small" color={Colors.primary} /> : <MapPin size={18} color={Colors.primary} />}
+              <Text style={{ flex: 1, fontWeight: '700', color: s.location ? Colors.primary : Colors.text, fontSize: 14 }}>
+                {s.location ? 'Location pinned ✓  ·  tap to update' : 'Use my current location'}
+              </Text>
+            </TouchableOpacity>
+            {s.location && (
+              <Text style={{ fontSize: 12, color: Colors.textMuted, marginBottom: 12, marginTop: -4 }}>
+                📍 {s.location.coordinates[1].toFixed(5)}, {s.location.coordinates[0].toFixed(5)}
+              </Text>
+            )}
             <Field label="Street address"><Input value={s.address} onChangeText={(v: string) => upd('address', v)} testID="f-addr" /></Field>
             <Field label="City"><Input value={s.city} onChangeText={(v: string) => upd('city', v)} placeholder="Bengaluru" testID="f-city" /></Field>
             <Field label="Area"><Input value={s.area} onChangeText={(v: string) => upd('area', v)} placeholder="Koramangala" testID="f-area" /></Field>
-            <Field label="Pincode"><Input value={s.pincode} onChangeText={(v: string) => upd('pincode', v)} keyboardType="numeric" testID="f-pin" /></Field>
+            <Field label="PIN code"><Input value={s.pincode} onChangeText={(v: string) => upd('pincode', v.replace(/\D/g, '').slice(0, 6))} placeholder="560001" keyboardType="numeric" maxLength={6} testID="f-pin" /></Field>
             <Field label="Landmark"><Input value={s.landmark} onChangeText={(v: string) => upd('landmark', v)} placeholder="Near Metro station" testID="f-lmk" /></Field>
           </Section>
 
